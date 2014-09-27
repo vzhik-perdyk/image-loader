@@ -3,6 +3,7 @@ package ru.ifmo.md.lesson3;
 import android.app.Activity;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
@@ -14,17 +15,25 @@ import org.apache.http.util.EntityUtils;
 import org.json.JSONObject;
 import org.json.JSONArray;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.lang.Exception;
 import java.lang.Override;
 import java.lang.String;
 import java.lang.Void;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.net.URLEncoder;
 
 
 public class MainActivity extends Activity {
 
     private final static String translatorPrefix = "https://translate.yandex.net/api/v1.5/tr.json/translate?key=trnsl.1.1.20140924T073928Z.75f4072f7ba0940a.0e25b6e1b08d1c03dfb34d22a4055d8118e44d77&lang=en-ru&text=";
-    private final static String imageLoaderPrefix = "https://api.datamarket.azure.com/Bing/Search/Image?$format=Json&top=10&Query=%27";
+    private final static String imageLoaderPrefix = "https://api.datamarket.azure.com/Bing/Search/v1/Image?Query=%27";
+
     private EditText editText;
     private TranslationTask translationTask;
     private ImageLoadingTask imageLoadingTask;
@@ -70,21 +79,35 @@ public class MainActivity extends Activity {
         @Override
         protected String[] doInBackground(String... word) {
             try {
-                String url = imageLoaderPrefix + URLEncoder.encode(word[0], "utf-8") + "%27";
-                DefaultHttpClient httpClient = new DefaultHttpClient();
-                HttpGet httpGet = new HttpGet(url);
-                httpGet.setHeader("Authorization", "Basic Vik8blAkuBkO6VyX8qJV+74lq79nNifdTToND5N8pQo=");
-                HttpResponse httpResponse = httpClient.execute(httpGet);
-                String response = EntityUtils.toString(httpResponse.getEntity());
+                URL url = new URL(imageLoaderPrefix + URLEncoder.encode(word[0], "utf-8") + "%27");
+                Log.i("url", url.toString());
+                String accountKey = ":Vik8blAkuBkO6VyX8qJV+74lq79nNifdTToND5N8pQo=";
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("GET");
+                connection.setRequestProperty("Accept", "application/json");
+
+                byte[] accountKeyBytes = accountKey.getBytes("utf-8");
+                String accountKeyEnc = Base64.encodeToString(accountKeyBytes, Base64.DEFAULT);
+                connection.setRequestProperty("Authorization", "Basic " + accountKeyEnc);
+
+                BufferedReader br = new BufferedReader(new InputStreamReader(
+                        (connection.getInputStream())));
+                String response;
+                response = br.readLine();
+                connection.disconnect();
+                PrintWriter writer = new PrintWriter("/sdcard/log.txt", "UTF-8");
+
+
                 JSONObject jsonObject = new JSONObject(response);
-                JSONArray responses = jsonObject.getJSONObject("SearchResponse").getJSONObject("Image").getJSONArray("Results");
-                String[] results = new String[responses.length()];
-                for (int i = 0; i < responses.length(); i++) {
-                    results[i] = responses.getJSONObject(i).getString("Url");
+                JSONArray responses = jsonObject.getJSONObject("d").getJSONArray("results");
+                String[] results = new String[10];
+                for (int i = 0; i < responses.length() && i < 10; i++) {
+                    results[i] = responses.getJSONObject(i).getString("MediaUrl");
                 }
-                for (String result : results) {
-                    Log.i("Response", "URL = " + result);
+                for (int i = 0; i < results.length; i++) {
+                    Log.i("Response", "URL = " + results[i]);
                 }
+                writer.println(response);
                 return results;
             } catch (Exception e) {
                 e.printStackTrace();
