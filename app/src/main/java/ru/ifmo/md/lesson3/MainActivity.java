@@ -49,19 +49,6 @@ public class  MainActivity extends Activity {
     public void onClick(View view) {
         translationTask = new TranslationTask();
         translationTask.execute(editText.getText().toString());
-        try {
-            imageLoadingTask = new ImageLoadingTask();
-            String translation = translationTask.get();
-            imageLoadingTask.execute(translation);
-            String[] imageUrls = imageLoadingTask.get();
-            Intent displayIntent = new Intent(this, DisplayActivity.class);
-            displayIntent.putExtra("translation", translation);
-            displayIntent.putExtra("imageUrls", imageUrls);
-            startActivity(displayIntent);
-            //get the result URLs using imageLoadingTask.get()
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     class TranslationTask extends AsyncTask<String, Void, String> {
@@ -79,6 +66,21 @@ public class  MainActivity extends Activity {
                 e.printStackTrace();
                 return null;
             }
+        }
+        @Override
+        protected void onPostExecute(String translation) {
+            imageLoadingTask = new ImageLoadingTask();
+            imageLoadingTask.execute(translation);
+            String[] imageUrls = null;
+            try {
+                imageUrls = imageLoadingTask.get();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            Intent displayIntent = new Intent(getApplicationContext(), DisplayActivity.class);
+            displayIntent.putExtra("translation", translation);
+            displayIntent.putExtra("imageUrls", imageUrls);
+            startActivity(displayIntent);
         }
     }
 
