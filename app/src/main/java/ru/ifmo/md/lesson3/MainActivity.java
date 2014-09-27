@@ -1,6 +1,7 @@
 package ru.ifmo.md.lesson3;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Base64;
@@ -29,7 +30,7 @@ import java.net.URL;
 import java.net.URLEncoder;
 
 
-public class MainActivity extends Activity {
+public class  MainActivity extends Activity {
 
     private final static String translatorPrefix = "https://translate.yandex.net/api/v1.5/tr.json/translate?key=trnsl.1.1.20140924T073928Z.75f4072f7ba0940a.0e25b6e1b08d1c03dfb34d22a4055d8118e44d77&lang=en-ru&text=";
     private final static String imageLoaderPrefix = "https://api.datamarket.azure.com/Bing/Search/v1/Image?Query=%27";
@@ -50,7 +51,13 @@ public class MainActivity extends Activity {
         translationTask.execute(editText.getText().toString());
         try {
             imageLoadingTask = new ImageLoadingTask();
-            imageLoadingTask.execute(translationTask.get());
+            String translation = translationTask.get();
+            imageLoadingTask.execute(translation);
+            String[] imageUrls = imageLoadingTask.get();
+            Intent displayIntent = new Intent(this, DisplayActivity.class);
+            displayIntent.putExtra("translation", translation);
+            displayIntent.putExtra("imageUrls", imageUrls);
+            startActivity(displayIntent);
             //get the result URLs using imageLoadingTask.get()
         } catch (Exception e) {
             e.printStackTrace();
@@ -95,7 +102,7 @@ public class MainActivity extends Activity {
                 String response;
                 response = br.readLine();
                 connection.disconnect();
-                PrintWriter writer = new PrintWriter("/sdcard/log.txt", "UTF-8");
+//                PrintWriter writer = new PrintWriter("/sdcard/log.txt", "UTF-8");
 
 
                 JSONObject jsonObject = new JSONObject(response);
@@ -107,7 +114,7 @@ public class MainActivity extends Activity {
                 for (int i = 0; i < results.length; i++) {
                     Log.i("Response", "URL = " + results[i]);
                 }
-                writer.println(response);
+//                writer.println(response);
                 return results;
             } catch (Exception e) {
                 e.printStackTrace();
