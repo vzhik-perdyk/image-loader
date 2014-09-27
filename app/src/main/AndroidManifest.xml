@@ -18,6 +18,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".DisplayActivity"
+            android:label="lesson3">
+        </activity>
     </application>
 
 </manifest>
