@@ -6,9 +6,9 @@
     android:paddingLeft="16dp"
     android:paddingRight="16dp"
     android:paddingTop="16dp"
+    android:fitsSystemWindows="true"
     android:paddingBottom="16dp"
     tools:context=".MainActivity">
-
 
     <EditText
         android:layout_width="0dp"
